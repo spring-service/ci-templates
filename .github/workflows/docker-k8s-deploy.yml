@@ -1,4 +1,4 @@
-name: Reusable Docker + K8s Deploy
+name: Reusable CI-CD (Build on GitHub, Deploy on Self-hosted)
 
 on:
   workflow_call:
@@ -11,8 +11,10 @@ on:
         type: string
 
 jobs:
-  build-and-deploy:
-    runs-on: [self-hosted, Linux, X64]
+
+  build-and-push:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout application code
@@ -31,6 +33,15 @@ jobs:
       - name: Push Docker Image
         run: |
           docker push ${{ inputs.image_name }}
+
+  deploy:
+    name: Deploy to K3s
+    runs-on: [self-hosted, Linux, X64]
+    needs: build-and-push
+
+    steps:
+      - name: Checkout application code
+        uses: actions/checkout@v4
 
       - name: Deploy to Kubernetes
         run: |
